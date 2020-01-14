@@ -15,12 +15,19 @@ using System.Threading;
 using Microsoft.CodeAnalysis.CodeGen;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.ExpressionEvaluator;
 using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.DiaSymReader;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 using Roslyn.Utilities;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+#pragma warning disable CS8600 // Possible null reference argument.
+#pragma warning disable CS8601 // Possible null reference argument.
+#pragma warning disable CS8602 // Possible null reference argument.
+#pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8603 // Possible null reference argument.
 
 namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
 {
@@ -276,6 +283,8 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 return null;
             }
 
+            syntax = new UplEvaluationTranslator(_currentFrame, syntax, _locals).Result as CSharpSyntaxNode;
+
             var context = CreateCompilationContext();
             if (!context.TryCompileExpression(syntax, TypeName, MethodName, aliases, testData, diagnostics, out var moduleBuilder, out var synthesizedMethod))
             {
@@ -516,6 +525,239 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             }
 
             return default;
+        }
+
+        internal class UplEvaluationTranslator : CSharpSyntaxRewriter
+        {
+            SyntaxNode node;
+            public readonly SyntaxNode Result;
+            SmallDictionary<string, string[]> mappings = new SmallDictionary<string, string[]>();
+            ImmutableArray<LocalSymbol> locals;
+            MethodSymbol methodSymbol;
+
+            public UplEvaluationTranslator(MethodSymbol methodSymbol, SyntaxNode node, ImmutableArray<LocalSymbol> _locals)
+            {
+                GetMappings(methodSymbol);
+                this.locals = _locals;
+                this.node = node;
+                this.methodSymbol = methodSymbol;
+
+                if (mappings.Count() == 0)
+                {
+                    Result = node;
+                }
+                else
+                {
+                    Result = this.Visit(node);
+                }
+            }
+
+            private bool IsTask(string[] matches)
+            {
+                if (matches.Length < 1) return false;
+                return (matches[0].StartsWith("Task"));
+            }
+            private bool IsArray(string[] matches, out int size)
+            {
+                size = 0;
+                if (matches.Length < 1) return false;
+                int pos = matches[0].IndexOf('[');
+                if (pos < 0) return false;
+                return int.TryParse(matches[0].Substring(pos + 1, matches[0].Length - 2 - pos), out size);
+            }
+
+            public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+            {
+                if (node.Name.Identifier.Text == "Result")
+                {
+                    var id = node.Expression as IdentifierNameSyntax;
+                    if (id != null)
+                    {
+                        var x = IdentifierNameRewrite(id, out var isTask);
+                        if (isTask) return x;
+                    }
+
+                    var ar = node.Expression as ElementAccessExpressionSyntax;
+                    if (ar != null)
+                    {
+                        id = ar.Expression as IdentifierNameSyntax;
+                        if (id != null)
+                        {
+                            var x = IdentifierNameRewrite(id, out var isTask);
+                            if (isTask)
+                            {
+                                return SyntaxFactory.ElementAccessExpression(x as ExpressionSyntax, ar.ArgumentList);
+                            }
+                        }
+                    }
+                }
+
+                return base.VisitMemberAccessExpression(node);
+            }
+
+            public override SyntaxNode VisitConditionalAccessExpression(ConditionalAccessExpressionSyntax node)
+            {
+                var binding = node.WhenNotNull as MemberBindingExpressionSyntax;
+                if (binding != null)
+                {
+                    if (binding.Name.Identifier.Text == "Result")
+                    {
+                        var id = node.Expression as IdentifierNameSyntax;
+                        if (id != null)
+                        {
+                            var x = IdentifierNameRewrite(id, out var isTask);
+                            if (isTask) return x;
+                        }
+
+                        var ar = node.Expression as ElementAccessExpressionSyntax;
+                        if (ar != null)
+                        {
+                            id = ar.Expression as IdentifierNameSyntax;
+                            if (id != null)
+                            {
+                                var x = IdentifierNameRewrite(id, out var isTask);
+                                if (isTask)
+                                {
+                                    return SyntaxFactory.ElementAccessExpression(x as ExpressionSyntax, ar.ArgumentList);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return base.VisitConditionalAccessExpression(node);
+            }
+
+            public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
+            {
+                return IdentifierNameRewrite(node, out var result);
+            }
+            public SyntaxNode IdentifierNameRewrite(IdentifierNameSyntax node, out bool isTask)
+            {
+                isTask = false;
+                var Name = node.Identifier.ValueText;
+                if (mappings.TryGetValue(Name, out var matches))
+                {
+                    isTask = IsTask(matches);
+                    if (IsArray(matches, out int arraySize))
+                    {
+                        string[] arrayvals = new string[arraySize];
+                        string currentArray = null;
+                        foreach (LocalSymbol local in locals)
+                        {
+                            if (local.Name != null)
+                            {
+                                int pos = local.Name.IndexOf("__I");
+                                if (pos > 0)
+                                {
+                                    string arrayName = local.Name.Substring(0, pos);
+                                    for (int i = 1; i < matches.Length; i++)
+                                    {
+                                        var m = matches[i];
+                                        if (m == arrayName && (currentArray == null || currentArray == arrayName))
+                                        {
+                                            currentArray = arrayName;
+                                            int pos2 = local.Name.IndexOf("__", pos + 1);
+                                            string intStr = pos2 < 0 ? local.Name.Substring(pos + 3) : local.Name.Substring(pos + 3, pos2 - pos2 - 3);
+                                            if (int.TryParse(intStr, out int index))
+                                            {
+                                                arrayvals[index] = local.Name;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (currentArray != null)
+                        {
+                            SyntaxList<ArrayRankSpecifierSyntax> rankSpecifiers = new SyntaxList<ArrayRankSpecifierSyntax>()
+                                .Add(ArrayRankSpecifier().AddSizes(OmittedArraySizeExpression()));
+                            var arrayNode = ArrayCreationExpression(ArrayType(PredefinedType(Token(SyntaxKind.ObjectKeyword)), rankSpecifiers));
+                            SeparatedSyntaxList<ExpressionSyntax> list = new SeparatedSyntaxList<ExpressionSyntax>();
+                            int cnt = 0;
+                            foreach (var arrayVal in arrayvals)
+                            {
+                                if (arrayVal != null)
+                                {
+                                    list = list.Add(IdentifierName(arrayVal));
+                                }
+                                else
+                                {
+                                    list = list.Add(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal($"'{Name}[{cnt}]' is not in UPL scope.")));
+                                }
+
+                                cnt++;
+                            }
+
+                            arrayNode = arrayNode.WithInitializer(InitializerExpression(SyntaxKind.ArrayInitializerExpression, list));
+                            return arrayNode;
+                        }
+                    }
+
+                    foreach (LocalSymbol local in locals)
+                    {
+                        if (local.CanBeReferencedByName)
+                        {
+                            for (int i = 1; i < matches.Length; i++)
+                            {
+                                var m = matches[i];
+                                if (m == local.Name)
+                                {
+                                    return IdentifierName(local.Name);
+                                }
+                            }
+                        }
+                    }
+
+                    foreach (var param in this.methodSymbol.Parameters)
+                    {
+                        for (int i = 1; i < matches.Length; i++)
+                        {
+                            var m = matches[i];
+                            if (m == param.Name)
+                            {
+                                return IdentifierName(param.Name);
+                            }
+                        }
+                    }
+
+                    return LiteralExpression(SyntaxKind.StringLiteralExpression, Literal($"'{Name}' is not in UPL scope."));
+                }
+
+                return node;
+            }
+
+            internal void GetMappings(MethodSymbol methodSymbol)
+            {
+                foreach (var attr in methodSymbol.GetAttributes())
+                {
+                    if (attr.AttributeClass.ToString() == "UPL.Xap.Internal.Symbol" && attr.ConstructorArguments.Count() == 1) 
+                    {
+                        var values = attr.ConstructorArguments.First().Values;
+                        if (values.Length > 1)
+                        {
+                            int i = 0;
+                            string[]? arr = null;
+                            foreach (var s in values)
+                            {
+                                var name = s.Value as string;
+                                if (i == 0)
+                                {
+                                    arr = new string[values.Length - 1];
+                                    mappings[name] = arr;
+                                }
+                                else
+                                {
+                                    arr[i - 1] = name;
+                                }
+
+                                i++;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

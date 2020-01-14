@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.LanguageServices
 
         public const string CSharpPackageIdString = "13c3bbb4-f18f-4111-9f54-a0fb010d9194";
         public const string CSharpProjectIdString = "fae04ec0-301f-11d3-bf4b-00c04f79efbc";
-        public const string CSharpLanguageServiceIdString = "694dd9b6-b865-4c5b-ad85-86356e9c88dc";
+        public const string CSharpLanguageServiceIdString = "694dd9b6-b865-4c5b-ad85-86356e9c88dc"; 
         public const string CSharpEditorFactoryIdString = "a6c744a8-0e4a-4fc6-886a-064283054674";
         public const string CSharpCodePageEditorFactoryIdString = "08467b34-b90f-4d91-bdca-eb8c8cf3033a";
         public const string CSharpCommandSetIdString = "d91af2f7-61f6-4d90-be23-d057d2ea961b";
