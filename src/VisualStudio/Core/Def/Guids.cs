@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.LanguageServices
 
         public const string CSharpPackageIdString = "13c3bbb4-f18f-4111-9f54-a0fb010d9194";
         public const string CSharpProjectIdString = "fae04ec0-301f-11d3-bf4b-00c04f79efbc";
-        public const string CSharpLanguageServiceIdString = "694dd9b6-b865-4c5b-ad85-86356e9c88dc"; 
+        public const string CSharpLanguageServiceIdString = "694dd9b6-b865-4c5b-ad85-86356e9c88dd";  //+1
         public const string CSharpEditorFactoryIdString = "a6c744a8-0e4a-4fc6-886a-064283054674";
         public const string CSharpCodePageEditorFactoryIdString = "08467b34-b90f-4d91-bdca-eb8c8cf3033a";
         public const string CSharpCommandSetIdString = "d91af2f7-61f6-4d90-be23-d057d2ea961b";
@@ -69,7 +69,7 @@ namespace Microsoft.VisualStudio.LanguageServices
         public const string VisualBasicProjectIdString = "F184B08F-C81C-45F6-A57F-5ABD9991F28F";
 
         public const string VisualBasicCompilerServiceIdString = "019971d6-4685-11d2-b48a-0000f87572eb";
-        public const string VisualBasicLanguageServiceIdString = "e34acdc0-baae-11d0-88bf-00a0c9110049";
+        public const string VisualBasicLanguageServiceIdString = "e34acdc0-baae-11d0-88bf-00a0c911004a"; //+1
         public const string VisualBasicEditorFactoryIdString = "2c015c70-c72c-11d0-88c3-00a0c9110049";
         public const string VisualBasicCodePageEditorFactoryIdString = "6c33e1aa-1401-4536-ab67-0e21e6e569da";
         public const string VisualBasicDebuggerLanguageIdString = "3a12d0b8-c26c-11d0-b442-00a0244a1dd2";
