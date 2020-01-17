@@ -2,7 +2,7 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
     <Identity Id="21BAC26D-2935-4D0D-A282-AD647E2592B5" Version="|%CurrentProject%;GetVsixVersion|" Language="en-US" Publisher="Microsoft" />
-    <DisplayName>Expression Evaluators</DisplayName>
+    <DisplayName>Roslyn Expression Evaluators</DisplayName>
     <Description xml:space="preserve">Roslyn Expression Evaluators</Description>
     <PackageId>Microsoft.CodeAnalysis.ExpressionEvaluator</PackageId>
     <License>EULA.rtf</License>
