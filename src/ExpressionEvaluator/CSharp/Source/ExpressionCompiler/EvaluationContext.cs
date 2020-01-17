@@ -732,7 +732,7 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
             {
                 foreach (var attr in methodSymbol.GetAttributes())
                 {
-                    if (attr.AttributeClass.ToString() == "UPL.Xap.Internal.Symbol" && attr.ConstructorArguments.Count() == 1) 
+                    if (attr.AttributeClass.ToString() == "UPL.Xap.Internal.Symbol" && attr.ConstructorArguments.Count() == 1)
                     {
                         var values = attr.ConstructorArguments.First().Values;
                         if (values.Length > 1)
