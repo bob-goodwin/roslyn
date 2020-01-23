@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.LanguageServices
         public static readonly Guid CSharpDebuggerLanguageId = new Guid(CSharpDebuggerLanguageIdString);
         public static readonly Guid CSharpLibraryId = new Guid(CSharpLibraryIdString);
 
-        // option page guids from csharp\rad\pkg\guids.h
+blic const string VisualBasicLanguageServiceIdString = "e34acdc0-baae-11d0-88bf-00a0c911004a"; //+1        // option page guids from csharp\rad\pkg\guids.h
         public const string CSharpOptionPageAdvancedIdString = "8FD0B177-B244-4A97-8E37-6FB7B27DE3AF";
         public const string CSharpOptionPageNamingStyleIdString = "294FBC9C-EF70-4AA0-BD4F-EB0C6A5908D7";
         public const string CSharpOptionPageIntelliSenseIdString = "EDE66829-7A36-4c5d-8E20-9290195DCF80";
@@ -69,7 +69,7 @@ namespace Microsoft.VisualStudio.LanguageServices
         public const string VisualBasicProjectIdString = "F184B08F-C81C-45F6-A57F-5ABD9991F28F";
 
         public const string VisualBasicCompilerServiceIdString = "019971d6-4685-11d2-b48a-0000f87572eb";
-        public const string VisualBasicLanguageServiceIdString = "e34acdc0-baae-11d0-88bf-00a0c911004a"; //+1
+        public const string VisualBasicLanguageServiceIdString = "e34acdc0-baae-11d0-88bf-00a0c9110049";
         public const string VisualBasicEditorFactoryIdString = "2c015c70-c72c-11d0-88c3-00a0c9110049";
         public const string VisualBasicCodePageEditorFactoryIdString = "6c33e1aa-1401-4536-ab67-0e21e6e569da";
         public const string VisualBasicDebuggerLanguageIdString = "3a12d0b8-c26c-11d0-b442-00a0244a1dd2";
