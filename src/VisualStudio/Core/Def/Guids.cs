@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.LanguageServices
         public static readonly Guid CSharpDebuggerLanguageId = new Guid(CSharpDebuggerLanguageIdString);
         public static readonly Guid CSharpLibraryId = new Guid(CSharpLibraryIdString);
 
-blic const string VisualBasicLanguageServiceIdString = "e34acdc0-baae-11d0-88bf-00a0c911004a"; //+1        // option page guids from csharp\rad\pkg\guids.h
+        // option page guids from csharp\rad\pkg\guids.h
         public const string CSharpOptionPageAdvancedIdString = "8FD0B177-B244-4A97-8E37-6FB7B27DE3AF";
         public const string CSharpOptionPageNamingStyleIdString = "294FBC9C-EF70-4AA0-BD4F-EB0C6A5908D7";
         public const string CSharpOptionPageIntelliSenseIdString = "EDE66829-7A36-4c5d-8E20-9290195DCF80";
