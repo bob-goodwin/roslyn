@@ -641,6 +641,9 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                     isTask = IsTask(matches);
                     if (IsArray(matches, out int arraySize))
                     {
+                        // TODO:
+                        // this only implements static dag where arrays are unrolled.  But with lanes, some
+                        // arrays may only be partially unrolled, so we need to build a composite array for the debugger.
                         string[] arrayvals = new string[arraySize];
                         string currentArray = null;
                         foreach (LocalSymbol local in locals)
@@ -695,26 +698,22 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                         }
                     }
 
-                    foreach (LocalSymbol local in locals)
+                    for (int i = matches.Length - 1; i >= 2; i--)
                     {
-                        if (local.CanBeReferencedByName)
+                        var m = matches[i];
+                        foreach (LocalSymbol local in locals)
                         {
-                            for (int i = 1; i < matches.Length; i++)
+                            if (local.CanBeReferencedByName)
                             {
-                                var m = matches[i];
                                 if (m == local.Name)
                                 {
                                     return IdentifierName(local.Name);
                                 }
                             }
                         }
-                    }
 
-                    foreach (var param in this.methodSymbol.Parameters)
-                    {
-                        for (int i = 1; i < matches.Length; i++)
+                        foreach (var param in this.methodSymbol.Parameters)
                         {
-                            var m = matches[i];
                             if (m == param.Name)
                             {
                                 return IdentifierName(param.Name);
