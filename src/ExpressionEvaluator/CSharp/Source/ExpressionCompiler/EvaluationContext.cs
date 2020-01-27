@@ -566,6 +566,32 @@ namespace Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator
                 return int.TryParse(matches[0].Substring(pos + 1, matches[0].Length - 2 - pos), out size);
             }
 
+            public override SyntaxNode VisitAwaitExpression(AwaitExpressionSyntax node)
+            {
+                var id = node.Expression as IdentifierNameSyntax;
+                if (id != null)
+                {
+                    var x = IdentifierNameRewrite(id, out var isTask);
+                    if (isTask) return x;
+                }
+
+                var ar = node.Expression as ElementAccessExpressionSyntax;
+                if (ar != null)
+                {
+                    id = ar.Expression as IdentifierNameSyntax;
+                    if (id != null)
+                    {
+                        var x = IdentifierNameRewrite(id, out var isTask);
+                        if (isTask)
+                        {
+                            return SyntaxFactory.ElementAccessExpression(x as ExpressionSyntax, ar.ArgumentList);
+                        }
+                    }
+                }
+
+                return base.VisitAwaitExpression(node);
+            }
+
             public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
             {
                 if (node.Name.Identifier.Text == "Result")
